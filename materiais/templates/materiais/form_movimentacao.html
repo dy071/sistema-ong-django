@@ -1,0 +1,27 @@
+{% if form.errors %}
+    <div style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+        <strong>Erro ao salvar:</strong>
+        <ul>
+            {% for field in form %}
+                {% for error in field.errors %}
+                    <li>{{ error }} </li>
+                {% endfor %}  
+            {% endfor %}
+            {% for error in form.non_field_errors %}
+                <li>{{ error }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endif %}
+
+<h1>Nova Movimentacao</h1>
+<h2>Movimentar: {{ material.nome }}</h2>
+
+<p><strong>Categoria:</strong> {{ material.categoria }}</p>
+<p><strong>Estoque atual:</strong> {{ material.estoque_atual }} unidades</p>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Salvar</button>
+</form>

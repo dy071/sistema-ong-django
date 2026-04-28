@@ -1,12 +1,20 @@
 from django.contrib import admin
-from .models import Material
+from .models import Material, Movimentacao
 
-# Boa prática: Usar uma classe customizada deixa o painel muito mais profissional
+# Painel para material
 @admin.register(Material)
 class MaterialAdmin(admin.ModelAdmin):
-    # Colunas que vão aparecer na lista
-    list_display = ('nome', 'categoria', 'quantidade', 'estado', 'data_cadastro')
-    # Adiciona uma barra de pesquisa pelo nome
+    list_display = ('nome', 'categoria', 'estoque_real', 'estado', 'data_cadastro')
     search_fields = ('nome',)
-    # Adiciona um filtro lateral por categoria e estado
     list_filter = ('categoria', 'estado')
+
+    # Função para a atualização do estoque
+    def estoque_real(self, obj):
+        return obj.estoque_atual()
+    
+    estoque_real.short_description = "Estoque"
+
+# Painel para movimentacao
+@admin.register(Movimentacao)
+class MovimentacaoAdmin(admin.ModelAdmin):
+    list_display = ('material', 'tipo', 'quantidade', 'data')

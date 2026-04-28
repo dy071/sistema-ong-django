@@ -13,16 +13,17 @@
                 <th>Ações</th> </tr>
         </thead>
         <tbody>
-            {% for item in materiais %}
+            {% for material in materiais %}
             <tr>
-                <td>{{ item.nome }}</td>
-                <td>{{ item.categoria }}</td>
-                <td>{{ item.quantidade }} unidades</td>
-                <td>{{ item.estado }}</td>
+                <td>{{ material.nome }}</td>
+                <td>{{ material.categoria }}</td>
+                <td>{{ material.estoque_atual}} unidades</td>
+                <td>{{ material.estado }}</td>
                 
                 <td>
-                    <a href="{% url 'editar_material' item.id %}" style="background-color: #ffc107; color: black; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold;">✏️ Editar</a>
-                    <a href="{% url 'excluir_material' item.id %}" style="background-color: #dc3545; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-left: 5px;">🗑️ Excluir</a>
+                    <a href="{% url 'editar_material' material.id %}" style="background-color: #ffc107; color: black; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold;">✏️ Editar</a>
+                    <a href="{% url 'excluir_material' material.id %}" style="background-color: #dc3545; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-left: 5px;">🗑️ Excluir</a>
+                    <a href="{% url 'cadastrar_movimentacao' material.id %}" style="background-color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-left: 5px;"> ➕Movimentar</a>
                 </td>
                 
             </tr>

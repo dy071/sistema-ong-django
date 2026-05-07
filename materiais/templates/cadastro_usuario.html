@@ -1,12 +1,89 @@
 {% extends 'materiais/base.html' %}
 
 {% block conteudo %}
-    <h1>👤 Cadastro de Usuário</h1>
-    </h1>
-    <div class="form-container">
+<style>
+    main, .container, .body-content {
+        display: flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        min-height: 80vh !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 20px 0 !important;
+    }
 
-        {% if form.errors %}
-            <div style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+    /*
+    body {
+        background-color: #f8f9fa; 
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 80vh;
+    }
+
+    .navbar {
+        display: none;
+    }
+    */
+
+    .form-container {
+        background: white !important;
+        padding: 40px !important;
+        border-radius: 20px !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.01) !important;
+        max-width: 450px !important;
+        width: 90% !important;
+        border: none !important;
+    }
+
+    .form-container h2 {
+        font-weight: 700;
+        margin-bottom: 25px;
+        color: #1a1a1a;
+        text-align: center;
+    }
+
+    .form-container p {
+        margin-bottom: 15 px !important;
+    }
+
+    .form-container p label {
+        display: block !important;
+        font-weight: 600 !important;
+        color: #444 !important;
+        margin-bottom: 5px !important;
+    }
+
+    .form-container input {
+        width: 100% !important;
+        padding: 12px !important;
+        border: 1px solid #ddd !important;
+        border-radius: 8px !important;
+        background-color: #fff !important;
+    }
+    
+    .form-container button {
+        background-color: #28a745 !important;
+        color: white !important;
+        width: 100% !important;
+        padding: 12px !important;
+        border: none !important;
+        border-radius: 8px !important;
+        font-weight: bold !important;
+        margin-top: 10px !important;
+        cursor: pointer;
+        transition: 0.3s;
+    }
+
+</style>
+
+<div class="form-container">
+    <h2 class="text-center mb-4">👤 Cadastro de Usuário</h2>
+
+    {% if form.errors %}
+            <div style="background-color: #f8d7da; color: #721c24; padding: 15px; border-radius: 8px; margin-bottom: 20px; font-size: 0.9rem;">
                 <strong>ERRO!</strong> Por favor, corrija os campos abaixo.
                 <ul>
                     {% for field in form %}
@@ -14,17 +91,22 @@
                             <li><strong>{{ field.label }}:</strong> {{ error }}</li>
                         {% endfor %}
                     {% endfor %}
+                    
                     {% for error in form.non_field_errors %}
                         <li>{{ error }}</li>
                     {% endfor %}
                 </ul>
             </div>
         {% endif %}
-        
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit">Registrar</button>
-        </form>
+    
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }} <button type="submit">Registrar</button>
+    </form>
+
+    <div class="text-center mt-3">
+        <p class="small text-muted">Já tem conta? <a href="{% url 'login' %}">Login</a></p>
     </div>
+</div>
+
 {% endblock %}

@@ -7,6 +7,13 @@ from django.core.exceptions import ValidationError
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login
 
+# Tela apresentação do sistema
+def home(request):
+    if request.user.is_authenticated:
+        return redirect('lista_materiais')
+    
+    return render(request, 'home.html')
+
 # Tela de estoque
 @login_required
 def lista_materiais(request):
@@ -107,9 +114,12 @@ def cadastro_movimentacoes(request, id):
             try:
                 if movimentacao.tipo == 'E':
                     Lote.objects.create(material=material, quantidade=movimentacao.quantidade, validade=form.cleaned_data.get('validade'))
-                    messages.warning(request, f"O item {material.nome} foi adicionado ao estoque. Priorize a saída dos itens mais antigos para evitar vencimentos.")
+                    messages.warning(request, f"O item {material.nome} foi adicionado ao estoque.")
 
                 elif movimentacao.tipo == 'S':
+                    if any(l.validade and l.validade < date.today() for l in Lote.objects.filter(material=material)):
+                        messages.warning(request, f"Itens vencidos no estoque: {material.nome}. Priorize a saída desses itens para evitar desperdícios.")
+
                     lotes = Lote.objects.filter(material=material, quantidade__gt=0).order_by('data_entrada')
                     quantidade_saida = movimentacao.quantidade
 
@@ -131,8 +141,8 @@ def cadastro_movimentacoes(request, id):
                 lotes_restantes = Lote.objects.filter(material=material)
                 for lote in lotes_restantes:
                     if any(l.validade and l.validade < date.today() for l in lotes_restantes):
-                        messages.warning(request, f"Há itens vencidos no estoque de {material.nome}!")
-                    
+                        messages.warning(request, f"Itens vencidos no estoque: {material.nome}. Priorize a saída desses itens para evitar desperdícios.")
+
                 movimentacao.save()
 
                 messages.success(request, 'Movimentação registrada com sucesso')
@@ -195,27 +205,3 @@ def cadastro_usuario(request):
         form = CadastroUsuarioForm()
 
     return render(request, 'cadastro_usuario.html', {'form': form})
-
-# Detecção de itens próximos do vencimento e itens vencidos 
-@login_required
-
-def get_notificacoes():
-    hoje = date.today()
-    limite = hoje + timedelta(days=30)
-
-    lotes = Lote.objects.filter(validade_isnull=False)
-
-    proximos_vencimento = []
-    vencidos = []
-
-    for lote in lotes:
-        if lote.validade < hoje:
-            vencidos.append(lote)
-        elif lote.validade <= limite:
-            proximos_vencimento.append(lote)
-
-    return {
-        'proximos_vencimento': proximos_vencimento,
-        'vencidos': vencidos,
-        'total': len(proximos_vencimento) + len(vencidos),
-    }

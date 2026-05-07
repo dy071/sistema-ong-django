@@ -74,6 +74,7 @@ class Movimentacao(models.Model):
     material = models.ForeignKey('Material', on_delete=models.CASCADE, related_name='movimentacoes')
     tipo = models.CharField(max_length=1, choices=TIPO_MOVIMENTACAO)
     quantidade = models.PositiveBigIntegerField()
+    validade = models.DateField(null=True, blank=True)
     data = models.DateTimeField(auto_now_add=True)
     observacao = models.TextField(blank=True, null=True)
     ativo = models.BooleanField(default=True)

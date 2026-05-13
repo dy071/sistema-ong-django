@@ -10,15 +10,16 @@
                 <th>Categoria</th>
                 <th>Quantidade</th>
                 <th>Estado</th>
-                <th>Ações</th> </tr>
+                <th>Ações</th> 
+            </tr>
         </thead>
         <tbody>
             {% for item in materiais_status %}
             <tr
                 {% if item.vencido %}
-                    style="background-color: #f8d7da;"  <!-- Vermelho claro para vencidos -->
+                    style="background-color: #f8d7da;"  
                 {% elif item.proximo_vencimento %}
-                    style="background-color: #fff3cd;"  <!-- Amarelo claro para próximos do vencimento -->
+                    style="background-color: #fff3cd;"  
                 {% endif %}
             >
 
@@ -44,7 +45,7 @@
                 {% else %}
                     <a href="{% url 'excluir_material' item.material.id %}" style="background-color: #dc3545; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-left: 5px;">🗑️ Excluir</a>
                 {% endif %}
-                <a href="{% url 'cadastrar_movimentacao' item.material.id %}" style="background-color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-left: 5px;"> ➕Movimentar</a>
+                <a href="{% url 'cadastrar_movimentacao' item.material.id %}" style="background-color: #ffffff; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-left: 5px;">➕ Movimentar</a>
                 <a href="{% url 'lista_movimentacoes' %}?material={{ item.material.id }}" style="background-color: #6f42c1; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-left: 5px;"> 🕒 Histórico</a>
             </td>
                 

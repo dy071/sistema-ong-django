@@ -17,10 +17,14 @@ def home(request):
 # Tela de estoque
 @login_required
 def lista_materiais(request):
-    if not Instituicao.objects.exists():
+    instituicao= Instituicao.objects.filter(usuario=request.user).first()
+    
+    if not instituicao:
         return redirect('instituicao_config')
-
-    materiais = Material.objects.filter(ativo=True)
+    
+    materiais = Material.objects.filter(instituicao=instituicao, ativo = True)
+    
+    
     materiais_status = []
 
     for material in materiais:
@@ -40,13 +44,20 @@ def lista_materiais(request):
     
     return render(request, 'materiais/lista_materiais.html', {'materiais_status': materiais_status})
 
-# Tela de cadastro
+# Tela de cadastro material 
 @login_required
 def cadastrar_material(request):
+    instituicao= Instituicao.objects.filter(usuario=request.user).first()
+       
+    if not instituicao:
+        return redirect('instituicao_config')
+    
     if request.method == 'POST':
         form = MaterialForm(request.POST)
         if form.is_valid():
-            form.save()
+            material = form.save(commit=False)
+            material.instituicao = instituicao
+            material.save()
             return redirect('lista_materiais')
     else:
         form = MaterialForm()
@@ -57,7 +68,7 @@ def cadastrar_material(request):
 # Tela de edição
 @login_required
 def editar_material(request, id):
-    material = get_object_or_404(Material, id=id)
+    material = get_object_or_404(Material, id=id, instituicao__usuario=request.user)
 
     if request.method == 'POST':
         form = MaterialForm(request.POST, instance=material)
@@ -73,7 +84,7 @@ def editar_material(request, id):
 # Tela de exclusão
 @login_required
 def excluir_material(request, id):
-    material = get_object_or_404(Material, id=id)
+    material = get_object_or_404(Material, id=id, instituicao__usuario=request.user)
 
     if request.method == 'POST':
         if material.movimentacoes.exists():
@@ -91,19 +102,20 @@ def excluir_material(request, id):
 # Tela de listagem de movimentações (consulta)
 @login_required
 def lista_movimentacoes(request):
-    material_id = request.GET.get('material')
-
+    material_id = request.GET.get('material_id')
+    
+    movimentacoes = Movimentacao.objects.filter(material__instituicao__usuario=request.user)
     if material_id:
-        movimentacoes = Movimentacao.objects.filter(material_id=material_id).order_by('-data')
-    else:
-        movimentacoes = Movimentacao.objects.all().order_by('-data')
+        movimentacoes = movimentacoes.filter(material_id=material_id)
+    
+    movimentacoes = movimentacoes.order_by('-data')
     
     return render(request, 'materiais/lista_movimentacoes.html', {'movimentacoes': movimentacoes})
 
 # Tela cadastro de movimentações 
 @login_required
 def cadastro_movimentacoes(request, id):
-    material = get_object_or_404(Material, id=id)
+    material = get_object_or_404(Material, id=id, instituicao__usuario=request.user)
 
     if request.method == 'POST':
         form = MovimentacaoForm(request.POST, material = material)
@@ -157,7 +169,8 @@ def cadastro_movimentacoes(request, id):
 # Tela de visualização e geração de relatório 
 @login_required
 def relatorio_estoque(request):
-    materiais = Material.objects.all()
+    instituicao = Instituicao.objects.filter(usuario=request.user).first()
+    materiais = Material.objects.filter(instituicao=instituicao, ativo = True)
 
     dados = []
     for material in materiais:
@@ -172,13 +185,14 @@ def relatorio_estoque(request):
 # Cadastro de instituições (tela institucional)
 @login_required
 def instituicao_config(request):
-    instiuicao = Instituicao.objects.first() 
+    instituicao = Instituicao.objects.filter(usuario=request.user).first()
 
     if request.method == 'POST':
-        form = InstituicaoForm(request.POST, instance=instiuicao)
+        form = InstituicaoForm(request.POST, instance=instituicao)
         if form.is_valid():
             try:
                 obkj = form.save(commit=False)
+                obkj.usuario = request.user
                 obkj.full_clean()
                 obkj.save() 
                 
@@ -189,7 +203,7 @@ def instituicao_config(request):
         else:
             messages.error(request, 'Por favor, corrija os erros abaixo.')
     else:
-        form = InstituicaoForm(instance=instiuicao) 
+        form = InstituicaoForm(instance=instituicao) 
 
     return render(request, 'materiais/instituicao.html', {'form': form})
 

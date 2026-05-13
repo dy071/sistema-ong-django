@@ -26,15 +26,14 @@ class CadastroUsuarioForm(UserCreationForm):
 class InstituicaoForm(forms.ModelForm):
     class Meta:
         model = Instituicao
-        fields = ['nome', 'cnpj', 'endereco', 'telefone', 'email']
+        fields = ['nome', 'documento', 'endereco', 'telefone', 'email']
         widgets = {
             'nome': forms.TextInput(attrs={'class': 'form-control'}),
-            'cnpj': forms.TextInput(attrs={'class': 'form-control'}),
+            'documento': forms.TextInput(attrs={'class': 'form-control'}),
             'endereco': forms.TextInput(attrs={'class': 'form-control'}),
             'telefone': forms.TextInput(attrs={'class': 'form-control'}),
             'email': forms.EmailInput(attrs={'class': 'form-control'}),
         }
-
 
     def clean_nome(self):
         nome = self.cleaned_data.get('nome')
@@ -44,15 +43,26 @@ class InstituicaoForm(forms.ModelForm):
             raise forms.ValidationError('O nome da instituição deve conter pelo menos 3 caracteres.')
         return nome
         
-    def clean_cnpj(self):
-        cnpj = self.cleaned_data.get('cnpj')
-        if not re.match(r'^\d{2}\.\d{3}\.\d{3}/\d{4}-\d{2}$', cnpj):
-            raise forms.ValidationError('O CNPJ deve estar no formato XX.XXX.XXX/XXXX-XX.')
-        if cnpj:
-            cnpj_numeros = re.sub(r'\D', '', cnpj)
-            if len(cnpj_numeros) != 14:
-                raise forms.ValidationError('O CNPJ deve conter 14 dígitos numéricos.')
-        return cnpj
+    def clean_documento(self):
+        documento = self.cleaned_data.get('documento')
+        
+        if not documento:
+            raise forms.ValidationError('O CPF/CNPJ é obrigatório.')
+        
+        numeros = re.sub(r'\D', '', documento)
+        
+        if len(numeros) == 11:
+            padrao_cpf = r'^\d{3}\.\d{3}\.\d{3}-\d{2}$'
+            if not re.match(padrao_cpf, documento):
+                raise forms.ValidationError('O CPF deve estar no formato XXX.XXX.XXX-XX.')
+            return documento
+        elif len(numeros) == 14:
+            padrao_cnpj = r'^\d{2}\.\d{3}\.\d{3}\/\d{4}-\d{2}$'
+            if not re.match(padrao_cnpj, documento):
+                raise forms.ValidationError('O CNPJ deve estar no formato XX.XXX.XXX/XXXX-XX.')
+            return documento
+        
+        raise forms.ValidationError('O CPF/CNPJ deve conter 11 ou 14 caracteres.')
     
     def clean_endereco(self):
         endereco = self.cleaned_data.get('endereco')

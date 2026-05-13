@@ -17,7 +17,8 @@
         <form method="POST">
             {% csrf_token %}
             {{ form.as_p }}
-            <button type="submit">Salvar Material</button>
+            <button type="submit"
+            onclick="this.disabled=true; this.form.submit();">Salvar</button>
         </form>
     </div>
 </div>

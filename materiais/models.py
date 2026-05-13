@@ -3,6 +3,7 @@ from django.db import models
 from django.db.models import Sum
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+from django.contrib.auth.models import User
 
 # Modelo para lotes de materiais, permitindo controle de validade e quantidade por lote
 class Lote(models.Model):
@@ -24,8 +25,10 @@ class Lote(models.Model):
     
 # Modelo de institução cadastrada no sistema
 class Instituicao(models.Model):
+    usuario = models.OneToOneField(User, on_delete=models.CASCADE)
+    
     nome = models.CharField(max_length=200, verbose_name="Nome da Instituição")
-    cnpj = models.CharField(max_length=18, unique=True, verbose_name="CNPJ")
+    documento = models.CharField(max_length=18, unique=True, verbose_name="CPF/CNPJ")
     endereco = models.CharField(max_length=255, verbose_name="Endereço")
     telefone = models.CharField(max_length=20, verbose_name="Telefone")
     email = models.EmailField(verbose_name="E-mail")
@@ -35,6 +38,11 @@ class Instituicao(models.Model):
     
 # Modelo para materiais
 class Material(models.Model):
+    class Meta:
+        unique_together = ['instituicao', 'nome']
+        
+    instituicao = models.ForeignKey(Instituicao, on_delete=models.CASCADE, related_name='materiais')
+    
     # Definindo opções fixas 
     CATEGORIAS_CHOICES = [
         ('ALIMENTOS', 'Alimentos não perecíveis'),

@@ -3,38 +3,64 @@
 {% block conteudo %}
 <style>
     .admin-content-wrapper {
-        padding: 40px 20px;
         display: flex;
         flex-direction: column;
         align-items: center;
+        padding: 40px 20px;
+    }
+
+    .intituicao-header {
+        width: 100%;
+        max-width: 500px;
+        margin-bottom: 20px;
+    }
+
+    .intituicao-header h1 {
+        font-size: 52px;
+        font-weigth: 700;
+        color: #222;
+        margin: 0;
+    }
+
+    .form-container {
+        width: 100%;
+        max-width: 500px;
+        background: white;
+        padding: 40px;
+        border-radius: 16px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
     }
 </style>
-    <h1>🏢 Informações da Instituição</h1>
 
-    <div class="form-container">
-        {% if form.errors %}
-            <div style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
-                <strong>Erro ao salvar</strong> 
-                <ul>
-                    {% for field in form %}
-                        {% for error in field.errors %}
-                            <li>{{ error }}</li>
-                        {% endfor %}
-                    {% endfor %}
-                    {% for error in form.non_field_errors %}
+<div class="admin-content-wrapper">
+    {% if form.errors %}
+        <div style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+            <strong>Erro ao salvar</strong> 
+            <ul>
+                {% for field in form %}
+                    {% for error in field.errors %}
                         <li>{{ error }}</li>
                     {% endfor %}
-                </ul>
-            </div>
-        {% endif %}
-        
+                {% endfor %}
+                {% for error in form.non_field_errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+    
+    <div class="instituicao-header">
+        <h2><strong>🏢 Informações da Instituição</strong></h2>
+    </div>
+
+    <div class="form-container">
         <form method="post">
             {% csrf_token %}
             <label for="nome">Nome da Instituição:</label>
             <input type="text" id="nome" name="nome" value="{{ instituicao.nome }}" required>
 
-            <label for="cnpj">CNPJ:</label>
-            <input type="text" id="cnpj" name="cnpj" value="{{ instituicao.cnpj }}" required>
+            <label for="documento">CPF/CNPJ:</label>
+            <input type="text" id="documento" name="documento" value="{{ instituicao.documento }}" required>
 
             <label for="endereco">Endereço:</label>
             <textarea id="endereco" name="endereco" rows="3" required>{{ instituicao.endereco }}</textarea>
@@ -48,6 +74,4 @@
             <button type="submit">Salvar Informações</button>
         </form>
     </div>
-
-    <a href="{% url 'lista_materiais' %}" style="display: inline-block; margin-top: 20px; background-color: #007bff; color: white; padding: 10px 15px; text-decoration: none; border-radius: 4px;">🔙 Voltar</a>
-    {% endblock %}
+{% endblock %}

@@ -1,14 +1,20 @@
 {% extends 'materiais/base.html' %}
 
 {% block conteudo %}
-    <h1>👤 Cadastro de Usuário</h1>
-    </h1>
-    <div class="form-container">
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 75vh;">
+    
+    <div class="card shadow-lg border-0" style="width: 100%; max-width: 500px; border-radius: 15px;">
+        <div class="card-body p-5">
+            
+            <div class="text-center mb-4">
+                <h2 style="color: #2c3e50; font-weight: bold;">👤 Novo Usuário</h2>
+                <p class="text-muted">Crie sua conta de acesso ao sistema</p>
+            </div>
 
-        {% if form.errors %}
-            <div style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+            {% if form.errors %}
+            <div class="alert alert-danger" role="alert">
                 <strong>ERRO!</strong> Por favor, corrija os campos abaixo.
-                <ul>
+                <ul class="mb-0 mt-2">
                     {% for field in form %}
                         {% for error in field.errors %}
                             <li><strong>{{ field.label }}:</strong> {{ error }}</li>
@@ -19,12 +25,21 @@
                     {% endfor %}
                 </ul>
             </div>
-        {% endif %}
-        
-        <form method="post">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit">Registrar</button>
-        </form>
+            {% endif %}
+
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="mb-4" style="line-height: 1.8;">
+                    {{ form.as_p }}
+                </div>
+                
+                <button type="submit" class="btn btn-success w-100 py-2 fs-5" style="border-radius: 8px;">
+                    Registrar Conta
+                </button>
+            </form>
+
+        </div>
     </div>
+</div>
 {% endblock %}

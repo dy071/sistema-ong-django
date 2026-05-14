@@ -18,7 +18,7 @@
                 <tbody>
                     {% for m in movimentacoes %}
                     <tr>
-                        <td>{{ m.data }}</td>
+                        <td>{{ m.data|date:"d/m/Y H:i" }}</td>
                         <td class="fw-bold">{{ m.material.nome }}</td>
                         <td>
                             {% if m.tipo == 'Entrada' %}

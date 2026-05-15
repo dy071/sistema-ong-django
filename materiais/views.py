@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import login
+from django.db import IntegrityError
 
 # Tela apresentação do sistema
 def home(request):
@@ -25,21 +26,22 @@ def lista_materiais(request):
     materiais = Material.objects.filter(instituicao=instituicao, ativo = True)
     
     materiais_status = []
+    hoje = date.today()
 
     for material in materiais:
-        lotes = Lote.objects.filter(material=material).order_by('validade')
-        hoje = date.today()
+        lotes = Lote.objects.filter(material=material, quantidade__gt=0).order_by('validade')
         alerta_vencimento = hoje + timedelta(days=30)
         
         estoque_atual = sum(l.quantidade for l in lotes)
 
-        vencidos = any(lote.validade and lote.validade <= hoje for lote in lotes)
-        proximos_vencimento = any(lote.validade and hoje <= lote.validade <= alerta_vencimento for lote in lotes)
+        vencidos = any(lote.validade and lote.validade < hoje for lote in lotes)
+        proximos_vencimento = any(lote.validade and hoje < lote.validade <= alerta_vencimento for lote in lotes)
         
         materiais_status.append({
             'material': material,
             'estoque': estoque_atual,
             'vencido': vencidos,
+            'tem_movimentacoes': Movimentacao.objects.filter(material=material).exists(),
             'proximo_vencimento': proximos_vencimento,
             'lotes': Lote.objects.filter(material=material, quantidade__gt=0).order_by('validade')
         })
@@ -64,10 +66,13 @@ def cadastrar_material(request):
     if request.method == 'POST':
         form = MaterialForm(request.POST)
         if form.is_valid():
-            material = form.save(commit=False)
-            material.instituicao = instituicao
-            material.save()
-            return redirect('lista_materiais')
+            try:
+                material = form.save(commit=False)
+                material.instituicao = instituicao
+                material.save()
+                return redirect('lista_materiais')
+            except IntegrityError:
+                form.add_error("nome", 'Este material já está cadastrado no seu estoque.')
     else:
         form = MaterialForm()
 
@@ -96,12 +101,11 @@ def excluir_material(request, id):
     material = get_object_or_404(Material, id=id, instituicao__usuario=request.user)
 
     if request.method == 'POST':
-        if material.movimentacoes.exists():
+        if Movimentacao.objects.filter(material=material, ativo=True).exists():
             messages.error(request, 'Não é possível exluir um material que possui movimentações registradas.')
             return redirect('lista_materiais')
         
-        material.ativo = False
-        material.save()
+        material.delete()
         messages.success(request, 'Material excluído com sucesso!')
         return redirect('lista_materiais')
 
@@ -128,53 +132,56 @@ def cadastro_movimentacoes(request, id):
 
     if request.method == 'POST':
         form = MovimentacaoForm(request.POST, material = material)
+        
+        quantidade = request.POST.get('quantidade')
+        if quantidade and int(quantidade) <= 0:
+            form.add_error('quantidade', 'A quantidade deve ser maior que zero.')
+            
         if form.is_valid():
             movimentacao = form.save(commit=False)
             movimentacao.material = material
-
+            
             try:
-                if movimentacao.tipo == 'E':
-                    Lote.objects.create(material=material, quantidade=movimentacao.quantidade, validade=form.cleaned_data.get('validade'))
-                    messages.warning(request, f"O item {material.nome} foi adicionado ao estoque.")
+                from django.db import transaction
+                with transaction.atomic():
+                    if movimentacao.tipo == 'E':
+                        Lote.objects.create(material=material, quantidade=movimentacao.quantidade, validade=form.cleaned_data.get('validade'))
+                        movimentacao.save()
 
-                elif movimentacao.tipo == 'S':
-                    if any(l.validade and l.validade < date.today() for l in Lote.objects.filter(material=material)):
-                        messages.warning(request, f"Itens vencidos no estoque: {material.nome}. Priorize a saída desses itens para evitar desperdícios.")
-
-                    lotes = Lote.objects.filter(material=material, quantidade__gt=0).order_by('data_entrada')
-                    quantidade_saida = movimentacao.quantidade
-
-                    for lote in lotes:
-                        if quantidade_saida <= 0:
-                            break
+                    elif movimentacao.tipo == 'S':
+                        lotes = Lote.objects.filter(material=material, quantidade__gt=0).order_by('data_entrada')
+                        quantidade_saida = movimentacao.quantidade
                         
-                        if lote.quantidade <= quantidade_saida:
-                            quantidade_saida -= lote.quantidade
-                            lote.delete()
-                        else:
-                            lote.quantidade -= quantidade_saida
-                            lote.save()
-                            quantidade_saida = 0
-
-                    if quantidade_saida > 0:
-                        raise ValidationError('Não há lotes suficientes para atender a quantidade de saída solicitada.')
-
-                lotes_restantes = Lote.objects.filter(material=material)
-                for lote in lotes_restantes:
-                    if any(l.validade and l.validade < date.today() for l in lotes_restantes):
-                        messages.warning(request, f"Itens vencidos no estoque: {material.nome}. Priorize a saída desses itens para evitar desperdícios.")
-
-                movimentacao.save()
-
-                messages.success(request, 'Movimentação registrada com sucesso')
-                return redirect('lista_materiais')
+                        if material.estoque_atual < quantidade_saida:
+                            raise ValidationError('Quantidade de saída maior que o estoque atual.')
+                        
+                        for lote in lotes:
+                            if quantidade_saida <= 0: 
+                                break
+                            if lote.quantidade <= quantidade_saida:
+                                quantidade_saida -= lote.quantidade
+                                lote.delete()
+                            else:
+                                lote.quantidade -= quantidade_saida
+                                lote.save()
+                                quantidade_saida = 0
+                        
+                        movimentacao.save()
+                        
+                    if movimentacao.tipo == 'E':
+                        messages.success(request, f"O item {material.nome} foi adicionado ao estoque.") 
+                    else:
+                        messages.success(request, 'Movimentação de saída registrada com sucesso')
+                    
+                    return redirect('lista_materiais')  
+            
             except ValidationError as e:
                 form.add_error(None, e)
     else:
-        form = MovimentacaoForm(material=material)
-
+        form = MovimentacaoForm(material = material)
+        
     return render(request, 'materiais/form_movimentacao.html', {'form': form, 'material': material})
-
+                
 # Tela de visualização e geração de relatório 
 @login_required
 def relatorio_estoque(request):

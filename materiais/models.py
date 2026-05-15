@@ -82,6 +82,11 @@ class Material(models.Model):
     def __str__(self):
         return self.nome
     
+    # Verificação se possui movimentações registradas
+    @property
+    def tem_movimentacoes(self):
+        return self.movimentacoes.filter(ativo=True).exists()
+    
     # Atualização automática da quantidade no estoque 
     @property
     def estoque_atual(self):    
@@ -136,7 +141,7 @@ class Movimentacao(models.Model):
             raise ValidationError('Esta movimentação já está cancelada.')
         
         if self.tipo == 'E':
-            estoque_atual = self.material.estoque_atual(); 
+            estoque_atual = self.material.estoque_atual; 
             if estoque_atual - self.quantidade < 0:
                 raise ValidationError('Não é possível cancelar esta entrada, pois existem saídas dependentes.')
         

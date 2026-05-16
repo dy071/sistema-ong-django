@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-#%ysrccv$0t7gvt_vw578gbn_x07)9=x^ow__sa7*cqnvs0&_k
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = ['sged.up.railway.app']
 
 
 # Application definition
@@ -81,11 +81,11 @@ WSGI_APPLICATION = 'setup.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': os.getenv('estoque_db'),
-        'USER': os.getenv('root'),
-        'PASSWORD': os.getenv('8605@ZTA27cdu'),
-        'HOST': os.getenv('localhost'),
-        'PORT': os.getenv('3306'),
+        'NAME': os.getenv('MYSQLDATABASE', 'estoque_db'),
+        'USER': os.getenv('MYSQLUSER', 'root'),
+        'PASSWORD': os.getenv('MYSQLPASSWORD', '8605@ZTA27cdu'),
+        'HOST': os.getenv('MYSQLHOST', 'localhost'),
+        'PORT': os.getenv('MYSQLPORT', '3306'),
     }
 }
 

@@ -1,6 +1,19 @@
 {% extends 'materiais/base.html' %}
 
 {% block conteudo %}
+<style>
+    .status-vencido {
+        border-left: 5px solid #dc3545;
+        background-color: #fff5f5;
+    }
+
+    .status-alerta {
+        border-left: 5px solid #ffc107;
+        background-color: #fffdf5;
+    }
+
+
+</style>
     <h3><strong>🗃️ Controle de Estoque</strong></h3>
 
     <table>
@@ -15,16 +28,13 @@
         </thead>
         <tbody>
             {% for item in materiais_status %}
-            <tr>
+            <tr class="{% if item.vencido %}status-vencido{% elif item.proximo_vencimento %}status-alerta{% endif %}">
                 <td>
-                    <div style="margin-buttom: 5px;">
-                        {{ item.material.nome }}
+                    <div style="margin-buttom: 5px;"><strong>{{ item.material.nome }}</strong>
                         {% if item.vencido %}
                             <span style="color: #dd2336; font-weight: bold;">(VENCIDO)</span>
                         {% elif item.proximo_vencimento %}
-                            <span style="color: #856404; font-weight: bold;">(PRÓXIMO DO VENCIMENTO)</span>
-                        {% else %}
-                            {{ item.material.nome }}
+                            <span style="color: #856404; font-weight: bold;">(A VENCER)</span>
                         {% endif %}
                     </div>
                 </td>
@@ -42,13 +52,13 @@
 
                         <a href="{% url 'cadastrar_movimentacao' item.material.id %}" style="background-color: #ffffff; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-left: 5px;">➕ Movimentar</a>
                     
-                        <a href="{% url 'lista_movimentacoes' %}?material={{ item.material.id }}" style="background-color: #6f42c1; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-left: 5px;"> 🕒 Histórico</a>
+                        <a href="{% url 'lista_movimentacoes' %}?material_id={{ item.material.id }}" style="background-color: #6f42c1; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-left: 5px;"> 🕒 Histórico</a>
                         
-                        {% if item.material.movimentacoes.exists %}
-                            <span style="color: gray; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-left: 5px;">🗑️ Excluir</span>
-                        {% else %}
-                            <a href="{% url 'excluir_material' item.material.id %}" style="background-color: #dc3545; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-left: 5px;">🗑️ Excluir</a>
-                        {% endif %}
+                        <a href="{% url 'excluir_material' item.material.id %}" 
+                        class="btn-excluir-estoque"
+                        data-movimentado="{% if item.tem_movimentacoes %}true{% else %}false{% endif %}" 
+                        style="background-color: #dc3545; color: white; padding: 5px 10px; text-decoration: none; border-radius: 4px; font-weight: bold; margin-left: 5px; display: inline-block;"> 
+                        🗑️ Excluir</a>
                     </div>      
                 </td>
             </tr>
@@ -60,4 +70,30 @@
             {% endfor %}
         </tbody>
     </table>
+
+<script>
+    // Desativar o botão de exclusão se o item contiver movimentações 
+    document.addEventListener('DOMContentLoaded', function () {
+        const botoes = document.querySelectorAll('.btn-excluir-estoque');
+
+        botoes.forEach(function (botao) {
+            const possuiMovimentacao = botao.getAttribute('data-movimentado') === 'true';
+
+            if (possuiMovimentacao) {
+                botao.style.setProperty('background-color', '#6c757d', 'important');
+                botao.style.setProperty('opacity', '0.6', 'important');
+                botao.style.setProperty('cursor', 'not-allowed', 'important');
+                
+                botao.setAttribute('title', 'Não é possível excluir um material com histórico de movimentações.');
+
+                botao.removeAttribute('href');
+
+                botao.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    return false;
+                });
+            }
+        });
+    });
+</script>
 {% endblock %}

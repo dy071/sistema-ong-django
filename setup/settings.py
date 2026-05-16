@@ -28,19 +28,14 @@ SECRET_KEY = 'django-insecure-#%ysrccv$0t7gvt_vw578gbn_x07)9=x^ow__sa7*cqnvs0&_k
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
-ALLOWED_HOSTS = [
 
-'sged.up.railway.app',
+ALLOWED_HOSTS = ['sged.up.railway.app', 'localhost', '127.0.0.1']
 
-'localhost',
+CSRF_TRUSTED_ORIGINS = ['https://sged.up.railway.app']
 
-'127.0.0.1'
-
-]
-
-
-CSRF_TRUSTED_ORIGINS = ['https://sged.up.railway.app/']
-
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 
 # Application definition
 
